@@ -1,0 +1,137 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../users/user.entity';
+import { UsersService } from '../users/users.service';
+import { mockedConfigService } from '../utils/mocks/config.service';
+import { mockedJwtService } from '../utils/mocks/jwt.service';
+import { AuthenticationService } from './authentication.service';
+import { mockedUser } from './mocks/user.mock';
+import * as bcrypt from 'bcrypt';
+import { RegisterDto } from './dto/register.dto';
+import { MockType } from '../utils/mocks/mockType';
+
+jest.mock('bcrypt');
+
+describe('AuthenticationService', () => {
+  let service: AuthenticationService;
+  let mockedUserService: MockType<UsersService>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        AuthenticationService,
+        {
+          provide: UsersService,
+          useValue: {
+            create: jest.fn(),
+            getByEmail: jest.fn(),
+          },
+        },
+        {
+          provide: ConfigService,
+          useValue: mockedConfigService,
+        },
+        {
+          provide: JwtService,
+          useValue: mockedJwtService,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: {},
+        },
+      ],
+    }).compile();
+
+    service = module.get<AuthenticationService>(AuthenticationService);
+    mockedUserService = module.get(UsersService);
+  });
+
+  describe('when accessing the data of authenticating user', () => {
+    describe('and password match', () => {
+      beforeEach(() => {
+        jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+        mockedUserService.getByEmail.mockResolvedValue(mockedUser);
+      });
+      it('expect to get user', async () => {
+        await expect(
+          service.getAuthenticatedUser('user@email.com', 'password'),
+        ).resolves.toEqual(mockedUser);
+      });
+    });
+
+    describe('and password dont match', () => {
+      beforeEach(() => {
+        jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+        mockedUserService.getByEmail.mockResolvedValue(mockedUser);
+      });
+      it('expect to throw error', async () => {
+        await expect(
+          service.getAuthenticatedUser('user@email.com', 'wrongPassword'),
+        ).rejects.toThrow();
+      });
+    });
+
+    describe('and user not found', () => {
+      beforeEach(() => {
+        mockedUserService.getByEmail.mockResolvedValue(undefined);
+        jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+      });
+      it('expect to throw error', async () => {
+        await expect(
+          service.getAuthenticatedUser('some@email.com', 'coolPassword'),
+        ).rejects.toThrow();
+      });
+    });
+  });
+
+  describe('when user logout', () => {
+    it('expect return a logout cookie string', () => {
+      const expected = 'Authentication=; HttpOnly; Path=/; Max-Age=0}';
+      expect(service.getCookieForLogout()).toEqual(expected);
+    });
+  });
+
+  describe('when creating a cookie', () => {
+    it('expect return a string', () => {
+      const userId = 1;
+      expect(typeof service.getCookieWithJwtToken(userId)).toEqual('string');
+    });
+  });
+
+  describe('when registre a new user', () => {
+    let user: User;
+    let registrationData: RegisterDto;
+
+    describe('and succesfully create it', () => {
+      beforeEach(() => {
+        user = new User();
+        registrationData = {
+          email: 'some@email.com',
+          name: 'Joe',
+          password: 'securePassword',
+        };
+        mockedUserService.create.mockResolvedValue(user);
+      });
+      it('expect to return user', async () => {
+        await expect(service.register(registrationData)).resolves.toEqual(user);
+      });
+    });
+
+    describe('and user with this email alredy exist', () => {
+      beforeEach(() => {
+        user = new User();
+        registrationData = {
+          email: 'alredy@exist.com',
+          name: 'Joe',
+          password: 'securePassword',
+        };
+        mockedUserService.create.mockRejectedValue(new Error());
+      });
+      it('expect to throw error', async () => {
+        await expect(service.register(registrationData)).rejects.toThrow();
+      });
+    });
+  });
+});
