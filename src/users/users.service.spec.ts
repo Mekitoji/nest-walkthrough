@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +12,11 @@ import {
   mockedUserWithAvatar,
   mockedUserWithoutAvatar,
 } from './mocks/mockedUser.mock';
+
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -150,6 +156,95 @@ describe('UsersService', () => {
         const userId = 1;
         await expect(service.deleteAvatar(userId)).resolves.toBeUndefined();
       });
+    });
+  });
+
+  describe('when setting current refresh token', () => {
+    beforeEach(() => {
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('string');
+      mockedUserRepository.update.mockResolvedValue({});
+    });
+    it('expect to ', async () => {
+      await expect(service.setCurrentRefreshToken('token', 1)).resolves.toEqual(
+        undefined,
+      );
+    });
+  });
+
+  describe('when check if refresh token matches', () => {
+    let user: User;
+    beforeEach(() => {
+      user = new User();
+    });
+    it('expect to update token', async () => {
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      await expect(service.setCurrentRefreshToken('token', 1)).resolves.toEqual(
+        undefined,
+      );
+    });
+  });
+
+  describe('when check if refresh token matches', () => {
+    describe('and all matches', () => {
+      let user: User;
+      const compareSpy = jest.spyOn(bcrypt, 'compare');
+      beforeEach(() => {
+        user = new User();
+        compareSpy.mockReset();
+      });
+      it('expect to return user', async () => {
+        compareSpy.mockResolvedValue(true);
+
+        const getByIdSpy = jest
+          .spyOn(service, 'getById')
+          .mockResolvedValue(user);
+        await expect(
+          service.getUserIfRefreshTokenMatches('token', 1),
+        ).resolves.toEqual(user);
+        expect(getByIdSpy).toHaveBeenCalled();
+        expect(compareSpy).toHaveBeenCalled();
+      });
+    });
+
+    describe('and something go wrong', () => {
+      let user: User;
+      const compareSpy = jest.spyOn(bcrypt, 'compare');
+      beforeEach(() => {
+        user = new User();
+        compareSpy.mockReset();
+      });
+      it('expect throw error if user not found', async () => {
+        const getByIdSpy = jest
+          .spyOn(service, 'getById')
+          .mockResolvedValue(null);
+        await expect(
+          service.getUserIfRefreshTokenMatches('token', 1),
+        ).rejects.toThrow();
+        expect(getByIdSpy).toHaveBeenCalled();
+        expect(compareSpy).not.toHaveBeenCalled();
+      });
+
+      it('expect throw error if refresh token do not match', async () => {
+        compareSpy.mockResolvedValue(false);
+        const getByIdSpy = jest
+          .spyOn(service, 'getById')
+          .mockResolvedValue(user);
+        await expect(
+          service.getUserIfRefreshTokenMatches('token', 1),
+        ).rejects.toThrow();
+
+        expect(compareSpy).toHaveBeenCalled();
+        expect(getByIdSpy).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('when removing refresh token', () => {
+    beforeEach(() => {
+      mockedUserRepository.update.mockResolvedValue(undefined);
+    })
+    it('expect to resolve', async () => {
+       await expect(service.removeRefreshToken(1)).resolves.toEqual(undefined);
     });
   });
 });

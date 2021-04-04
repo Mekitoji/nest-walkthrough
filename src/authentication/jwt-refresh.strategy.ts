@@ -7,20 +7,28 @@ import { UsersService } from '../users/users.service';
 import { TokenPayload } from './tokenPayload.interface';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtRefreshTokenStrategy extends PassportStrategy(
+  Strategy,
+  'jwt-refresh-token',
+) {
   constructor(
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => request?.cookies?.Authentication,
+        (request: Request) => request?.cookies?.Refresh,
       ]),
-      secretOrKey: configService.get('JWT_ACCESS_TOKEN_SECRET'),
+      secretOrKey: configService.get('JWT_REFRESH_TOKEN_SECRET'),
+      passReqToCallack: true,
     });
   }
 
-  public async validate(payload: TokenPayload) {
-    return this.usersService.getById(payload.userId);
+  public async validate(request: Request, payload: TokenPayload) {
+    const refreshToken = request.cookies?.Refresh;
+    return this.usersService.getUserIfRefreshTokenMatches(
+      refreshToken,
+      payload.userId,
+    );
   }
 }

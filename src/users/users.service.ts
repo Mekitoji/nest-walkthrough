@@ -5,6 +5,7 @@ import { FilesService } from '../files/files.service';
 import { PublicFile } from '../files/publicFile.entity';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -72,5 +73,46 @@ export class UsersService {
       });
       await this.filesService.deletePublicFile(fileId);
     }
+  }
+
+  public async setCurrentRefreshToken(
+    refreshToken: string,
+    userId: number,
+  ): Promise<void> {
+    const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.usersRepository.update(userId, {
+      currentHashedRefreshToken,
+    });
+  }
+
+  public async getUserIfRefreshTokenMatches(
+    refreshToken: string,
+    userId: number,
+  ): Promise<User> {
+    const user = await this.getById(userId);
+
+    if (!user) {
+      throw new HttpException(
+        'User with this id does not exist',
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const isRefreshTokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.currentHashedRefreshToken,
+    );
+
+    if (isRefreshTokenMatches) {
+      return user;
+    }
+
+    throw new HttpException('Refresh tokken not match', HttpStatus.FORBIDDEN);
+  }
+
+  public async removeRefreshToken(userId: number) {
+    this.usersRepository.update(userId, {
+      currentHashedRefreshToken: null,
+    });
   }
 }

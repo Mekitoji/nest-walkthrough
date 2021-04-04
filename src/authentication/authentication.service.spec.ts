@@ -88,15 +88,29 @@ describe('AuthenticationService', () => {
 
   describe('when user logout', () => {
     it('expect return a logout cookie string', () => {
-      const expected = 'Authentication=; HttpOnly; Path=/; Max-Age=0}';
+      const expected = [
+        'Authentication=; HttpOnly; Path=/; Max-Age=0',
+        'Refresh=; HttpOnly; Path=/; Max-Age=0',
+      ];
       expect(service.getCookieForLogout()).toEqual(expected);
     });
   });
 
-  describe('when creating a cookie', () => {
+  describe('when creating a cookie with acccess token', () => {
     it('expect return a string', () => {
       const userId = 1;
-      expect(typeof service.getCookieWithJwtToken(userId)).toEqual('string');
+      expect(typeof service.getCookieWithJwtAccessToken(userId)).toEqual(
+        'string',
+      );
+    });
+  });
+
+  describe('when creating a cookie with refresh token', () => {
+    it('expect return an object ', () => {
+      const userId = 1;
+      expect(typeof service.getCookieWithJwtRefreshToken(userId)).toEqual(
+        'object',
+      );
     });
   });
 
