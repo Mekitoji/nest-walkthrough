@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { FilesService } from '../files/files.service';
 import { MockType } from '../utils/mocks/mockType';
 import { CreateUserDto } from './dto/createUser.dto';
@@ -41,6 +41,21 @@ describe('UsersService', () => {
           useValue: {
             uploadPublicFile: jest.fn(),
             deletePublicFile: jest.fn(),
+            deletePublicFileWithQueryRunner: jest.fn(),
+          },
+        },
+        {
+          provide: Connection,
+          useValue: {
+            createQueryRunner: jest.fn().mockReturnThis(),
+            connect: jest.fn(),
+            startTransaction: jest.fn(),
+            manager: {
+              update: jest.fn(),
+            },
+            commitTransaction: jest.fn(),
+            rollbackTransaction: jest.fn(),
+            release: jest.fn(),
           },
         },
       ],
@@ -141,7 +156,9 @@ describe('UsersService', () => {
       beforeEach(() => {
         mockedUserRepository.findOne.mockResolvedValue(mockedUserWithAvatar);
         mockedUserRepository.update.mockResolvedValue({});
-        mockedFilesService.deletePublicFile.mockResolvedValue({});
+        mockedFilesService.deletePublicFileWithQueryRunner.mockResolvedValue(
+          {},
+        );
       });
       it('expect to not throw an error and return undefined', async () => {
         const userId = 1;
@@ -152,9 +169,9 @@ describe('UsersService', () => {
       beforeEach(() => {
         mockedUserRepository.findOne.mockResolvedValue(mockedUserWithoutAvatar);
       });
-      it('expect to not throw an error and return undefined', async () => {
+      it('expect to not throw an error', async () => {
         const userId = 1;
-        await expect(service.deleteAvatar(userId)).resolves.toBeUndefined();
+        await expect(service.deleteAvatar(userId)).rejects.toThrow();
       });
     });
   });

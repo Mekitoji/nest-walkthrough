@@ -1,6 +1,11 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Connection, Repository } from 'typeorm';
 import { FilesService } from '../files/files.service';
 import { PublicFile } from '../files/publicFile.entity';
 import { CreateUserDto } from './dto/createUser.dto';
@@ -13,6 +18,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private readonly filesService: FilesService,
+    private readonly connection: Connection,
   ) {}
 
   public async getByEmail(email: string): Promise<User> {
@@ -64,15 +70,32 @@ export class UsersService {
   }
 
   public async deleteAvatar(userId: number): Promise<void> {
+    const queryRunner = this.connection.createQueryRunner();
+
     const user = await this.getById(userId);
     const fileId = user.avatar?.id;
     if (fileId) {
-      await this.usersRepository.update(userId, {
-        ...user,
-        avatar: null,
-      });
-      await this.filesService.deletePublicFile(fileId);
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+      try {
+        await queryRunner.manager.update(User, userId, {
+          ...user,
+          avatar: null,
+        });
+        await this.filesService.deletePublicFileWithQueryRunner(
+          fileId,
+          queryRunner,
+        );
+        await queryRunner.commitTransaction();
+      } catch (error) {
+        await queryRunner.rollbackTransaction();
+        throw new InternalServerErrorException();
+      } finally {
+        await queryRunner.release();
+      }
+      return;
     }
+    throw new HttpException('User do not have avatar', HttpStatus.NOT_FOUND);
   }
 
   public async setCurrentRefreshToken(
