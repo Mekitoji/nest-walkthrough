@@ -11,11 +11,13 @@ import {
 } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { AuthenticationService } from './authentication.service';
+
+import { JwtAuthenticationGuard } from './guards/jwt-authentication.guard';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
+import { LocalAuthenticationGuard } from './guards/localAuthentication.guard';
+
 import { RegisterDto } from './dto/register.dto';
-import { JwtAuthenticationGuard } from './jwt-authentication.guard';
-import { JwtRefreshGuard } from './jwt-refresh.guard';
-import { LocalAuthenticationGuard } from './localAuthentication.guard';
-import { RequestWithUser } from './requestWithUser.interface';
+import { RequestWithUser } from './interfaces/requestWithUser.interface';
 
 @Controller('authentication')
 @UseInterceptors(ClassSerializerInterceptor)

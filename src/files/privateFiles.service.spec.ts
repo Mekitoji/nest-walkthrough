@@ -1,16 +1,18 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { mockedConfigService } from '../utils/mocks/config.service';
-import { PrivateFilesService } from './privateFiles.service';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import 'aws-sdk';
-import { MockType } from '../utils/mocks/mockType';
 import { Repository } from 'typeorm';
+import { Readable } from 'stream';
+
+import { MockType } from '../utils/mocks/mockType';
 import { PrivateFile } from './privateFile.entity';
 import { User } from '../users/user.entity';
+import { mockedConfigService } from '../utils/mocks/config.service';
+import { PrivateFilesService } from './privateFiles.service';
+
 import { mockedPrivateFile } from './mocks/file.mock';
-import { Readable } from 'stream';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { mockedUser } from './mocks/user.mock';
 
 const mockedS3Instance = {

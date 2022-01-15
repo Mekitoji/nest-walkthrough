@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { config } from 'aws-sdk';
 import * as cookieParser from 'cookie-parser';
+
 import { AppModule } from './app.module';
 import { ExcludeNullInterceptor } from './utils/excludeNull.interceptor';
 

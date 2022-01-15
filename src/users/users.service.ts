@@ -6,11 +6,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+
 import { FilesService } from '../files/files.service';
 import { PublicFile } from '../files/publicFile.entity';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './user.entity';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {

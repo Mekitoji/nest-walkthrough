@@ -1,6 +1,7 @@
 import { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+
 import { recursivelyStripNullValues } from './recursivelyStripNullValues';
 
 export class ExcludeNullInterceptor implements NestInterceptor {

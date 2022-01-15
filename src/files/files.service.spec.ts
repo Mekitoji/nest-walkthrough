@@ -1,12 +1,13 @@
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import 'aws-sdk';
+
 import { mockedConfigService } from '../utils/mocks/config.service';
 import { FilesService } from './files.service';
 import { PublicFile } from './publicFile.entity';
-import 'aws-sdk';
 import { MockType } from '../utils/mocks/mockType';
-import { Repository } from 'typeorm';
 
 const mockedS3Instance = {
   upload: jest.fn().mockReturnThis(),

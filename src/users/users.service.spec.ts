@@ -2,12 +2,13 @@ import * as bcrypt from 'bcrypt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Connection, Repository } from 'typeorm';
-import { FilesService } from '../files/files.service';
+
 import { MockType } from '../utils/mocks/mockType';
+import { FilesService } from '../files/files.service';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './user.entity';
-import { UsersService } from './users.service';
 import { PublicFile } from '../files/publicFile.entity';
+import { UsersService } from './users.service';
 import {
   mockedUserWithAvatar,
   mockedUserWithoutAvatar,

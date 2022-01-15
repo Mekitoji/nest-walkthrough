@@ -7,8 +7,9 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { JwtAuthenticationGuard } from '../authentication/jwt-authentication.guard';
-import { RequestWithUser } from '../authentication/requestWithUser.interface';
+
+import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
+import { RequestWithUser } from '../authentication/interfaces/requestWithUser.interface';
 import { UsersService } from './users.service';
 
 @Controller('users')

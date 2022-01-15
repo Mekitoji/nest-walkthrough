@@ -5,11 +5,12 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { S3 } from 'aws-sdk';
-import { Repository } from 'typeorm';
-import { PrivateFile } from './privateFile.entity';
-import { v4 as uuid } from 'uuid';
 import { Readable } from 'stream';
+import { S3 } from 'aws-sdk';
+import { v4 as uuid } from 'uuid';
+import { Repository } from 'typeorm';
+
+import { PrivateFile } from './privateFile.entity';
 import { User } from '../users/user.entity';
 
 @Injectable()

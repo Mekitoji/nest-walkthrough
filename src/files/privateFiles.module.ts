@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
 import { PrivateFilesController } from './privateFiles.controller';
 import { PrivateFile } from './privateFile.entity';
 import { PrivateFilesService } from './privateFiles.service';

@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { PostsModule } from './posts/posts.module';
 import { ConfigModule } from '@nestjs/config';
+import * as Joi from 'joi';
+
+import { PostsModule } from './posts/posts.module';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { FilesModule } from './files/files.module';
 import { PrivateFilesModule } from './files/privateFiles.module';
 import { SearchModule } from './search/search.module';
-import * as Joi from '@hapi/joi';
 
 @Module({
   imports: [

@@ -7,6 +7,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
 import { PrivateFile } from '../files/privateFile.entity';
 import { PublicFile } from '../files/publicFile.entity';
 import { Post } from '../posts/post.entity';
