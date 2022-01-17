@@ -13,14 +13,14 @@ export class PostsService {
   constructor(
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
-    private postSearchService: PostSearchService
+    private postSearchService: PostSearchService,
   ) {}
 
-  async getAllPosts(): Promise<Post[]> {
+  public async getAllPosts(): Promise<Post[]> {
     return this.postRepository.find();
   }
 
-  async getPostById(id: number): Promise<Post> {
+  public async getPostById(id: number): Promise<Post> {
     const post = await this.postRepository.findOne(id);
 
     if (post) {
@@ -71,5 +71,12 @@ export class PostsService {
     return this.postRepository.find({
       where: { id: In(ids) },
     });
+  }
+
+  public async getPostsWithParagraph(paragraph: string): Promise<Post[]> {
+    return this.postRepository.query(
+      'SELECT * from post WHERE $1 = ANY(paragraphs)',
+      [paragraph],
+    );
   }
 }

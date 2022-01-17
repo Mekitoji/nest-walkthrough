@@ -4,10 +4,10 @@ export class UpdatePostDto {
   @IsNumber()
   id: number;
 
-  @IsString()
-  @IsOptional()
+  @IsString({ each: true })
   @IsNotEmpty()
-  content: string;
+  @IsOptional()
+  paragraphs: string[];
 
   @IsString()
   @IsNotEmpty()

@@ -37,6 +37,7 @@ describe('PostsService', () => {
             create: jest.fn(),
             save: jest.fn(),
             delete: jest.fn(),
+            query: jest.fn(),
           },
         },
       ],
@@ -64,7 +65,7 @@ describe('PostsService', () => {
         post = {
           id: 1,
           title: 'title',
-          content: 'content',
+          paragraphs: ['paragraph1', 'paragraph2'],
           categories: [],
         };
         mockedPostRepository.findOne.mockResolvedValue(post);
@@ -95,13 +96,13 @@ describe('PostsService', () => {
         post = {
           id: 1,
           title: 'title',
-          content: 'content',
+          paragraphs: ['paragraph1', 'paragraph2'],
           categories: [],
         };
         newPost = {
           id: 1,
           title: 'title',
-          content: 'content',
+          paragraphs: ['paragraph1', 'paragraph2'],
         };
         mockedPostRepository.update.mockResolvedValue({});
         mockedPostRepository.findOne.mockResolvedValue(post);
@@ -120,7 +121,7 @@ describe('PostsService', () => {
         newPost = {
           id: 1,
           title: 'title',
-          content: 'content',
+          paragraphs: ['paragraph1', 'paragraph2'],
         };
         mockedPostRepository.update.mockResolvedValue({});
         mockedPostRepository.findOne.mockResolvedValue(undefined);
@@ -141,7 +142,7 @@ describe('PostsService', () => {
       user = new User();
       newPost = {
         title: 'title',
-        content: 'content',
+        paragraphs: ['paragraph1', 'paragraph2'],
       };
       mockedPostRepository.create.mockResolvedValue({
         ...newPost,
@@ -210,6 +211,34 @@ describe('PostsService', () => {
       await expect(service.searchForPosts(text)).resolves.toEqual(expected);
       expect(spySearch).toHaveBeenCalled();
       expect(spyFind).toHaveBeenCalled();
+    });
+  });
+
+  describe('when search for post by paragraph', () => {
+    const paragraph = 'paragraph1';
+
+    it('expect to return a null if not found any post', async () => {
+      const spyQuery = jest
+        .spyOn(mockedPostRepository, 'query')
+        .mockResolvedValue([]);
+
+      await expect(service.getPostsWithParagraph(paragraph)).resolves.toEqual(
+        [],
+      );
+      expect(spyQuery).toHaveBeenCalled();
+    });
+
+    it('expect to return an array of posts', async () => {
+      const posts = [mockedSearchPost1];
+      const spyQuery = jest
+        .spyOn(mockedPostRepository, 'query')
+        .mockResolvedValue(posts);
+      const expected = [mockedSearchPost1];
+
+      await expect(service.getPostsWithParagraph(paragraph)).resolves.toEqual(
+        expected,
+      );
+      expect(spyQuery).toHaveBeenCalled();
     });
   });
 });
