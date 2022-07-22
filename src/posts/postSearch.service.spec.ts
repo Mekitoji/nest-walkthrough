@@ -22,6 +22,7 @@ describe('PostSearchService', () => {
             search: jest.fn(),
             deleteByQuery: jest.fn(),
             updateByQuery: jest.fn(),
+            count: jest.fn(),
           },
         },
       ],
@@ -58,22 +59,52 @@ describe('PostSearchService', () => {
           _source: post2,
         },
       ];
+      const spyCount = jest.spyOn(elasticsearchService, 'count');
 
       const searchResult: PostSearchResult = {
-        hits: {
-          total: 3,
-          hits,
-        },
+        total: 2,
+        hits,
       };
-      const expected = [post1, post2];
+      const expected = { results: [post1, post2], count: 2 };
 
-      const spy = jest
+      const spySearch = jest
         .spyOn(elasticsearchService, 'search')
-        .mockResolvedValue({ body: searchResult });
+        .mockResolvedValue({ hits: searchResult });
 
       await expect(service.search(text)).resolves.toEqual(expected);
 
-      expect(spy).toHaveBeenCalled();
+      expect(spySearch).toHaveBeenCalled();
+      expect(spyCount).not.toHaveBeenCalled();
+    });
+
+    it('expect to find posts with text when called with startId', async () => {
+      text = 'some text';
+      hits = [
+        {
+          _source: post1,
+        },
+        {
+          _source: post2,
+        },
+      ];
+      const spyCount = jest
+        .spyOn(elasticsearchService, 'count')
+        .mockResolvedValue({ count: 3 });
+
+      const searchResult: PostSearchResult = {
+        total: 2,
+        hits,
+      };
+      const expected = { results: [post1, post2], count: 3 };
+
+      const spySearch = jest
+        .spyOn(elasticsearchService, 'search')
+        .mockResolvedValue({ hits: searchResult });
+
+      await expect(service.search(text, 1, 2, 1)).resolves.toEqual(expected);
+
+      expect(spySearch).toHaveBeenCalled();
+      expect(spyCount).toHaveBeenCalled();
     });
   });
 

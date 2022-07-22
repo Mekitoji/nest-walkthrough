@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { ElasticsearchService } from '@nestjs/elasticsearch';
 import { Post } from './post.entity';
 import { PostSearchBody } from './types/postSearchBody.interface';
-import { PostSearchResult } from './types/postSearchResult.interface';
 
 @Injectable()
 export class PostSearchService {
@@ -11,7 +10,7 @@ export class PostSearchService {
   constructor(private readonly elasticsearchService: ElasticsearchService) {}
 
   public async indexPost(post: Post): Promise<void> {
-    await this.elasticsearchService.index<PostSearchResult, PostSearchBody>({
+    await this.elasticsearchService.index<PostSearchBody>({
       index: this.index,
       body: {
         id: post.id,
@@ -22,22 +21,65 @@ export class PostSearchService {
     });
   }
 
-  public async search(text: string) {
-    const { body } = await this.elasticsearchService.search<PostSearchResult>({
+  private async count(query: string, fields: string[]): Promise<number> {
+    const { count } = await this.elasticsearchService.count({
       index: this.index,
       body: {
         query: {
           multi_match: {
-            query: text,
-            fields: ['title', 'paragraphs'],
+            query,
+            fields,
           },
         },
       },
     });
 
-    const hits = body.hits.hits;
+    return count;
+  }
 
-    return hits.map((item) => item._source);
+  public async search(
+    text: string,
+    offset?: number,
+    limit?: number,
+    startId?: number,
+  ): Promise<{ count: number; results: PostSearchBody[] }> {
+    let separateCount = 0;
+    if (startId) {
+      separateCount = await this.count(text, ['title', 'paragraphs']);
+    }
+    const { hits: hitsBody } =
+      await this.elasticsearchService.search<PostSearchBody>({
+        index: this.index,
+        from: offset,
+        size: limit,
+        body: {
+          query: {
+            multi_match: {
+              query: text,
+              fields: ['title', 'paragraphs'],
+            },
+            range: {
+              id: {
+                gt: startId,
+              },
+            },
+          },
+          sort: {
+            id: {
+              order: 'asc',
+            },
+          },
+        },
+      });
+
+    const { total: count, hits } = hitsBody;
+
+    const results = hits.map((item) => item._source);
+
+    return {
+      count: startId ? separateCount : (count as number),
+      results,
+    };
   }
 
   public async remove(postId: number): Promise<void> {
@@ -75,9 +117,7 @@ export class PostSearchService {
             id: post.id,
           },
         },
-        script: {
-          inline: script,
-        },
+        script,
       },
     });
   }

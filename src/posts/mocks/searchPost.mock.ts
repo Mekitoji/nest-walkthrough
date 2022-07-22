@@ -1,3 +1,4 @@
+import { Post } from '../post.entity';
 import { PostSearchBody } from '../types/postSearchBody.interface';
 
 export const mockedSearchPost1: PostSearchBody = {
@@ -13,3 +14,30 @@ export const mockedSearchPost2: PostSearchBody = {
   paragraphs: ['some new content'],
   authorId: 2,
 };
+
+export const mockedPosts: Post[] = [
+  {
+    id: 1,
+    title: 'title',
+    paragraphs: ['paragraph1', 'paragraph2'],
+    categories: [],
+  },
+  {
+    id: 2,
+    title: 'title2',
+    paragraphs: ['paragraph1', 'paragraph2'],
+    categories: [],
+  },
+  {
+    id: 3,
+    title: 'title2',
+    paragraphs: ['paragraph1', 'paragraph2'],
+    categories: [],
+  },
+  {
+    id: 4,
+    title: 'title2',
+    paragraphs: ['paragraph1', 'paragraph2'],
+    categories: [],
+  },
+];

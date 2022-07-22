@@ -52,7 +52,7 @@ describe('AuthenticationService', () => {
   describe('when accessing the data of authenticating user', () => {
     describe('and password match', () => {
       beforeEach(() => {
-        jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+        jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
         mockedUserService.getByEmail.mockResolvedValue(mockedUser);
       });
       it('expect to get user', async () => {
@@ -64,7 +64,7 @@ describe('AuthenticationService', () => {
 
     describe('and password dont match', () => {
       beforeEach(() => {
-        jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+        jest.spyOn(bcrypt, 'compare').mockImplementation(() => false);
         mockedUserService.getByEmail.mockResolvedValue(mockedUser);
       });
       it('expect to throw error', async () => {
@@ -77,7 +77,7 @@ describe('AuthenticationService', () => {
     describe('and user not found', () => {
       beforeEach(() => {
         mockedUserService.getByEmail.mockResolvedValue(undefined);
-        jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
+        jest.spyOn(bcrypt, 'compare').mockImplementation(() => false);
       });
       it('expect to throw error', async () => {
         await expect(

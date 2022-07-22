@@ -52,10 +52,10 @@ export class PrivateFilesService {
   ): Promise<{ stream: Readable; info: PrivateFile }> {
     const s3 = new S3();
 
-    const fileInfo = await this.privateFilesRepository.findOne(
-      { id: fileId },
-      { relations: ['owner'] },
-    );
+    const fileInfo = await this.privateFilesRepository.findOne({
+      where: { id: fileId },
+      relations: ['owner'],
+    });
 
     if (!fileInfo) {
       throw new NotFoundException();
@@ -89,7 +89,8 @@ export class PrivateFilesService {
   public async getAllPrivateFiles(
     userId: number,
   ): Promise<{ id: number; key: string; url: string }[]> {
-    const userWithFiles = await this.usersRepository.findOne(userId, {
+    const userWithFiles = await this.usersRepository.findOne({
+      where: { id: userId },
       relations: ['files'],
     });
 

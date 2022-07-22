@@ -179,7 +179,7 @@ describe('UsersService', () => {
 
   describe('when setting current refresh token', () => {
     beforeEach(() => {
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('string');
+      jest.spyOn(bcrypt, 'hash').mockImplementation(() => 'string');
       mockedUserRepository.update.mockResolvedValue({});
     });
     it('expect to ', async () => {
@@ -190,12 +190,12 @@ describe('UsersService', () => {
   });
 
   describe('when check if refresh token matches', () => {
-    let user: User;
-    beforeEach(() => {
-      user = new User();
-    });
+    // let user: User;
+    // beforeEach(() => {
+    // user = new User();
+    // });
     it('expect to update token', async () => {
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(() => true);
       await expect(service.setCurrentRefreshToken('token', 1)).resolves.toEqual(
         undefined,
       );
@@ -211,7 +211,7 @@ describe('UsersService', () => {
         compareSpy.mockReset();
       });
       it('expect to return user', async () => {
-        compareSpy.mockResolvedValue(true);
+        compareSpy.mockImplementation(() => true);
 
         const getByIdSpy = jest
           .spyOn(service, 'getById')
@@ -234,7 +234,7 @@ describe('UsersService', () => {
       it('expect throw error if user not found', async () => {
         const getByIdSpy = jest
           .spyOn(service, 'getById')
-          .mockResolvedValue(null);
+          .mockImplementation(() => null);
         await expect(
           service.getUserIfRefreshTokenMatches('token', 1),
         ).rejects.toThrow();
@@ -243,10 +243,10 @@ describe('UsersService', () => {
       });
 
       it('expect throw error if refresh token do not match', async () => {
-        compareSpy.mockResolvedValue(false);
+        compareSpy.mockImplementation(() => false);
         const getByIdSpy = jest
           .spyOn(service, 'getById')
-          .mockResolvedValue(user);
+          .mockImplementation(() => Promise.resolve(user));
         await expect(
           service.getUserIfRefreshTokenMatches('token', 1),
         ).rejects.toThrow();
@@ -259,10 +259,10 @@ describe('UsersService', () => {
 
   describe('when removing refresh token', () => {
     beforeEach(() => {
-      mockedUserRepository.update.mockResolvedValue(undefined);
-    })
+      mockedUserRepository.update.mockResolvedValue(() => undefined);
+    });
     it('expect to resolve', async () => {
-       await expect(service.removeRefreshToken(1)).resolves.toEqual(undefined);
+      await expect(service.removeRefreshToken(1)).resolves.toEqual(undefined);
     });
   });
 });

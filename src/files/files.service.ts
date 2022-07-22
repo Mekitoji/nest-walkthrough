@@ -36,7 +36,9 @@ export class FilesService {
   }
 
   public async deletePublicFile(fileId: number): Promise<void> {
-    const file = await this.publicFilesRepository.findOne(fileId);
+    const file = await this.publicFilesRepository.findOne({
+      where: { id: fileId },
+    });
     if (!file) {
       throw new HttpException(
         `File with id ${fileId} not found`,
@@ -59,7 +61,9 @@ export class FilesService {
     fileId: number,
     queryRunner: QueryRunner,
   ) {
-    const file = await queryRunner.manager.findOne(PublicFile, { id: fileId });
+    const file = await queryRunner.manager.findOne(PublicFile, {
+      where: { id: fileId },
+    });
     const s3 = new S3();
     await s3
       .deleteObject({

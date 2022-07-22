@@ -5,7 +5,11 @@ import { User } from '../users/user.entity';
 import { MockType } from '../utils/mocks/mockType';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { mockedSearchPost1, mockedSearchPost2 } from './mocks/searchPost.mock';
+import {
+  mockedSearchPost1,
+  mockedSearchPost2,
+  mockedPosts,
+} from './mocks/searchPost.mock';
 import { Post } from './post.entity';
 import { PostsService } from './posts.service';
 import { PostSearchService } from './postsSearch.service';
@@ -32,12 +36,14 @@ describe('PostsService', () => {
           provide: getRepositoryToken(Post),
           useValue: {
             find: jest.fn(),
+            findAndCount: jest.fn(),
             findOne: jest.fn(),
             update: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
             delete: jest.fn(),
             query: jest.fn(),
+            count: jest.fn(),
           },
         },
       ],
@@ -51,10 +57,62 @@ describe('PostsService', () => {
   describe('when getting all posts', () => {
     let posts: Post[];
     beforeEach(() => {
-      mockedPostRepository.find.mockResolvedValue(posts);
+      posts = [];
+      mockedPostRepository.findAndCount.mockResolvedValue(undefined);
     });
-    it('expect to return array of it', async () => {
-      await expect(service.getAllPosts()).resolves.toEqual(posts);
+    it('expect to return array empty array with count 0', async () => {
+      posts = [];
+      mockedPostRepository.findAndCount.mockResolvedValue([posts, 0]);
+      await expect(service.getAllPosts()).resolves.toEqual({
+        items: posts,
+        count: 0,
+      });
+    });
+
+    it('expect to return result with some posts', async () => {
+      posts = mockedPosts;
+      mockedPostRepository.findAndCount.mockResolvedValue([
+        posts,
+        posts.length,
+      ]);
+      const spyCount = jest.spyOn(mockedPostRepository, 'count');
+      await expect(service.getAllPosts()).resolves.toEqual({
+        items: posts,
+        count: posts.length,
+      });
+      expect(spyCount).not.toHaveBeenCalled();
+    });
+
+    it('expect to return result with offset and limit', async () => {
+      posts = mockedPosts.slice(1, 3);
+      mockedPostRepository.findAndCount.mockResolvedValue([posts, 2]);
+      const spyCount = jest.spyOn(mockedPostRepository, 'count');
+      const offset = 1;
+      const limit = 2;
+      await expect(service.getAllPosts(offset, limit)).resolves.toEqual({
+        items: posts,
+        count: posts.length,
+      });
+
+      expect(spyCount).not.toHaveBeenCalled();
+    });
+
+    it('expect to return result when calling with startId', async () => {
+      posts = mockedPosts.slice(1, 3);
+      mockedPostRepository.findAndCount.mockResolvedValue([posts, 2]);
+      mockedPostRepository.count.mockResolvedValue(2);
+      const spyCount = jest.spyOn(mockedPostRepository, 'count');
+      const offset = 1;
+      const limit = 2;
+      const startId = 1;
+      await expect(
+        service.getAllPosts(offset, limit, startId),
+      ).resolves.toEqual({
+        items: posts,
+        count: posts.length,
+      });
+
+      expect(spyCount).toHaveBeenCalled();
     });
   });
 
@@ -62,12 +120,7 @@ describe('PostsService', () => {
     describe('and it was found', () => {
       let post: Post;
       beforeEach(() => {
-        post = {
-          id: 1,
-          title: 'title',
-          paragraphs: ['paragraph1', 'paragraph2'],
-          categories: [],
-        };
+        post = mockedPosts[0];
         mockedPostRepository.findOne.mockResolvedValue(post);
       });
 
@@ -93,12 +146,7 @@ describe('PostsService', () => {
       let post: Post;
       let newPost: UpdatePostDto;
       beforeEach(() => {
-        post = {
-          id: 1,
-          title: 'title',
-          paragraphs: ['paragraph1', 'paragraph2'],
-          categories: [],
-        };
+        post = mockedPosts[0];
         newPost = {
           id: 1,
           title: 'title',
@@ -109,9 +157,9 @@ describe('PostsService', () => {
       });
       it('expect to return updated post', async () => {
         const id = 1;
-        const spy = jest.spyOn(mockedSearchService, 'update');
+        const spyUpdate = jest.spyOn(mockedSearchService, 'update');
         await expect(service.replacePost(id, newPost)).resolves.toEqual(post);
-        expect(spy).toHaveBeenCalled();
+        expect(spyUpdate).toHaveBeenCalled();
       });
     });
 
@@ -127,10 +175,10 @@ describe('PostsService', () => {
         mockedPostRepository.findOne.mockResolvedValue(undefined);
       });
       it('expect to throw an error', async () => {
-        const spy = jest.spyOn(mockedSearchService, 'update');
+        const spyUpdate = jest.spyOn(mockedSearchService, 'update');
         const id = 3241;
         await expect(service.replacePost(id, newPost)).rejects.toThrow();
-        expect(spy).not.toHaveBeenCalled();
+        expect(spyUpdate).not.toHaveBeenCalled();
       });
     });
   });
@@ -192,9 +240,12 @@ describe('PostsService', () => {
     it('expect to return an empty error if search return empty result', async () => {
       const spySearch = jest
         .spyOn(mockedSearchService, 'search')
-        .mockResolvedValue([]);
+        .mockResolvedValue({ results: [], count: 0 });
       const spyFind = jest.spyOn(mockedPostRepository, 'find');
-      await expect(service.searchForPosts(text)).resolves.toEqual([]);
+      await expect(service.searchForPosts(text)).resolves.toEqual({
+        items: [],
+        count: 0,
+      });
       expect(spySearch).toHaveBeenCalled();
       expect(spyFind).not.toHaveBeenCalled();
     });
@@ -203,12 +254,15 @@ describe('PostsService', () => {
       const posts = [mockedSearchPost1, mockedSearchPost2];
       const spySearch = jest
         .spyOn(mockedSearchService, 'search')
-        .mockResolvedValue([{ id: 1 }, { id: 2 }]);
+        .mockResolvedValue({ results: [{ id: 1 }, { id: 2 }], count: 2 });
       const spyFind = jest
         .spyOn(mockedPostRepository, 'find')
         .mockResolvedValue(posts);
       const expected = [mockedSearchPost1, mockedSearchPost2];
-      await expect(service.searchForPosts(text)).resolves.toEqual(expected);
+      await expect(service.searchForPosts(text)).resolves.toEqual({
+        items: expected,
+        count: 2,
+      });
       expect(spySearch).toHaveBeenCalled();
       expect(spyFind).toHaveBeenCalled();
     });

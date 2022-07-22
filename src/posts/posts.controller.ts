@@ -19,6 +19,7 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthenticationGuard } from '../authentication/guards/jwt-authentication.guard';
 import { FindOneParams } from '../utils/findOneParams';
 import { RequestWithUser } from '../authentication/interfaces/requestWithUser.interface';
+import { PaginationParams } from '../utils/types/paginationParams';
 
 @Controller('posts')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -53,10 +54,13 @@ export class PostsController {
   }
 
   @Get()
-  public async getPosts(@Query('search') search: string) {
+  public async getPosts(
+    @Query('search') search: string,
+    @Query() { offset, limit }: PaginationParams,
+  ) {
     if (search) {
-      return this.postsService.searchForPosts(search);
+      return this.postsService.searchForPosts(search, offset, limit);
     }
-    return this.postsService.getAllPosts();
+    return this.postsService.getAllPosts(offset, limit);
   }
 }
