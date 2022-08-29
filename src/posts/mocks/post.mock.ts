@@ -11,4 +11,5 @@ export const mockedPost: Post = {
     name: 'John',
     password: 'password',
   },
+  comments: [],
 };

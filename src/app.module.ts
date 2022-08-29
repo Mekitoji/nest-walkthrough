@@ -9,6 +9,8 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { FilesModule } from './files/files.module';
 import { PrivateFilesModule } from './files/privateFiles.module';
 import { SearchModule } from './search/search.module';
+import { SubscribersModule } from './subscribers/subscribers.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { SearchModule } from './search/search.module';
     AuthenticationModule,
     FilesModule,
     SearchModule,
+    SubscribersModule,
+    CommentsModule,
   ],
 })
 export class AppModule {}

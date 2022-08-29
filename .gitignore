@@ -4,6 +4,7 @@
 
 # Enviroment
 .env
+rabbitmq.env
 
 # Logs
 logs

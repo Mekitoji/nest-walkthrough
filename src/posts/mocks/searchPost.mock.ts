@@ -21,23 +21,27 @@ export const mockedPosts: Post[] = [
     title: 'title',
     paragraphs: ['paragraph1', 'paragraph2'],
     categories: [],
+    comments: [],
   },
   {
     id: 2,
     title: 'title2',
     paragraphs: ['paragraph1', 'paragraph2'],
     categories: [],
+    comments: [],
   },
   {
     id: 3,
     title: 'title2',
     paragraphs: ['paragraph1', 'paragraph2'],
     categories: [],
+    comments: [],
   },
   {
     id: 4,
     title: 'title2',
     paragraphs: ['paragraph1', 'paragraph2'],
     categories: [],
+    comments: [],
   },
 ];

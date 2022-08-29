@@ -6,8 +6,10 @@ import {
   JoinTable,
   ManyToMany,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { Category } from '../categories/category.entity';
+import { Comment } from '../comments/comment.entity';
 import { User } from '../users/user.entity';
 
 @Entity()
@@ -31,4 +33,7 @@ export class Post {
   @ManyToMany(() => Category)
   @JoinTable()
   public categories: Category[];
+
+  @OneToMany(() => Comment, (comment: Comment) => comment.post)
+  public comments: Comment[];
 }
