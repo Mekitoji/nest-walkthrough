@@ -86,9 +86,10 @@ export class AuthenticationService {
     )}`;
   }
 
-  public getCookieWithJwtRefreshToken(
-    userId: number,
-  ): { cookie: string; token: string } {
+  public getCookieWithJwtRefreshToken(userId: number): {
+    cookie: string;
+    token: string;
+  } {
     const payload: TokenPayload = { userId };
     const token = this.jwtService.sign(payload, {
       secret: this.configService.get('JWT_REFRESH_TOKEN_SECRET'),

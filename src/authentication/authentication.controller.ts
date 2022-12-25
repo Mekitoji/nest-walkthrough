@@ -38,12 +38,10 @@ export class AuthenticationController {
   public async logIn(@Req() request: RequestWithUser) {
     const { user } = request;
 
-    const accessTokenCookie = this.authenticationService.getCookieWithJwtAccessToken(
-      user.id,
-    );
-    const refreshTokenCookie = this.authenticationService.getCookieWithJwtRefreshToken(
-      user.id,
-    );
+    const accessTokenCookie =
+      this.authenticationService.getCookieWithJwtAccessToken(user.id);
+    const refreshTokenCookie =
+      this.authenticationService.getCookieWithJwtRefreshToken(user.id);
 
     this.usersService.setCurrentRefreshToken(refreshTokenCookie.token, user.id);
 
@@ -74,9 +72,8 @@ export class AuthenticationController {
   @UseGuards(JwtRefreshGuard)
   @Get('/refresh')
   public refresh(@Req() request: RequestWithUser) {
-    const accessTokenCookie = this.authenticationService.getCookieWithJwtAccessToken(
-      request.user.id,
-    );
+    const accessTokenCookie =
+      this.authenticationService.getCookieWithJwtAccessToken(request.user.id);
     request.res.setHeader('Set-Cookie', accessTokenCookie);
 
     return request.user;
