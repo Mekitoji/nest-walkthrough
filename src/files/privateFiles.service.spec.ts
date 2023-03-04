@@ -120,7 +120,7 @@ describe('PrivateFilesService', () => {
           const userId = 233;
           await expect(
             service.getPrivateFile(userId, fileId),
-          ).rejects.toThrowError(new UnauthorizedException());
+          ).rejects.toThrowError(UnauthorizedException);
         });
       });
     });

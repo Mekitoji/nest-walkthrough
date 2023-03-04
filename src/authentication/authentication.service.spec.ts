@@ -12,6 +12,11 @@ import { AuthenticationService } from './authentication.service';
 import { mockedUser } from './mocks/user.mock';
 import { RegisterDto } from './dto/register.dto';
 import { MockType } from '../utils/mocks/mockType';
+import { PostgresErrorCode } from '../database/postgresErrorCodes.enum';
+
+class UniqueViolationException extends Error {
+  public readonly code = PostgresErrorCode.UniqueViolation;
+}
 
 jest.mock('bcrypt');
 
@@ -134,7 +139,7 @@ describe('AuthenticationService', () => {
       });
     });
 
-    describe('and user with this email alredy exist', () => {
+    describe('throw an error', () => {
       beforeEach(() => {
         user = new User();
         registrationData = {
@@ -142,10 +147,20 @@ describe('AuthenticationService', () => {
           name: 'Joe',
           password: 'securePassword',
         };
-        mockedUserService.create.mockRejectedValue(new Error());
       });
-      it('expect to throw error', async () => {
-        await expect(service.register(registrationData)).rejects.toThrow();
+      it('when violation unique name', async () => {
+        mockedUserService.create.mockRejectedValue(
+          new UniqueViolationException(),
+        );
+        await expect(service.register(registrationData)).rejects.toThrow(
+          'User with that email already exist',
+        );
+      });
+      it('when something go wrong', async () => {
+        mockedUserService.create.mockRejectedValue(new Error());
+        await expect(service.register(registrationData)).rejects.toThrow(
+          'Something went wrong',
+        );
       });
     });
   });
